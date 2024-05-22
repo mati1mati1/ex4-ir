@@ -1,0 +1,271 @@
+/*************/
+/* IMPORT(S) */
+/*************/
+import java_cup.runtime.*;
+import AST.*;
+import java.io.PrintWriter;
+import AST.AST_VAR.*;
+import AST.AST_EXP.*;
+import AST.AST_STMT.*;
+import AST.AST_DEC.*;
+import AST.AST_CFIE.*;
+import AST.AST_LIST.*;
+import AST.AST_NEWEXP.*;
+import AST.AST_OPT.*;
+import AST.AST_TYPE.*;
+
+
+parser code
+{:
+	public Lexer lexer;
+    public boolean lexicalErr = false;
+    public boolean failed = false;
+    public PrintWriter pwriter;
+    public int NumOfLine = 0;
+    public int parserLine = 0;
+
+
+    public Parser(Lexer lexer, PrintWriter pwriter)
+	{
+		super(lexer);
+		this.lexer = lexer;
+		this.pwriter = pwriter;
+        this.parserLine = 0;
+
+	}
+
+
+	public void report_error(String message, Object info)
+	{
+	        if(lexicalErr)
+	            pwriter.write("ERROR\n");
+            else
+                pwriter.write("ERROR("+lexer.getLine()+")\n");
+            NumOfLine=lexer.getLine();
+            failed=true;
+            pwriter.close();
+
+            System.exit(0);
+	}
+:}
+
+/************************/
+/* CUSTOMIZE CUP PARSER */
+/************************/
+scan with
+{:
+	Symbol s;
+    this.parserLine = lexer.getLine();
+	s = lexer.next_token();
+
+	if (s.sym == TokenNames.error) {
+        lexicalErr = true;
+    }
+
+	return s;
+:};
+
+/*************/
+/* TERMINALS */
+/*************/
+terminal IF;
+terminal EQ;
+terminal DOT;
+terminal PLUS;
+terminal MINUS;
+terminal TIMES;
+terminal WHILE;
+terminal DIVIDE;
+terminal LPAREN;
+terminal RPAREN;
+terminal LBRACK;
+terminal RBRACK;
+terminal LBRACE;
+terminal RBRACE;
+terminal SEMICOLON;
+terminal ASSIGN;
+terminal NIL;
+terminal COMMA;
+terminal TYPE_INT;
+terminal TYPE_VOID;
+terminal TYPE_STRING;
+terminal LT;
+terminal GT;
+terminal ARRAY;
+terminal CLASS;
+terminal EXTENDS;
+terminal RETURN;
+terminal NEW;
+
+/*************/
+/* TERMINALS */
+/*************/
+terminal Integer INT;
+terminal String ID;
+terminal String STRING;
+
+/*****************/
+/* NON TERMINALS */
+/*****************/
+non terminal AST_PRGM Program;
+non terminal AST_DEC dec;
+non terminal AST_TYPE type;
+non terminal AST_ARRAY_TYPEDEF arrayTypedef;
+non terminal AST_VARDEC varDec;
+non terminal AST_FUNCDEC funcDec;
+non terminal AST_CLASSDEC classDec;
+non terminal AST_EXP exp;
+non terminal AST_VAR var;
+non terminal AST_STMT stmt;
+non terminal AST_NEWEXP newExp;
+non terminal AST_CFIELD cField;
+non terminal AST_BINOP BINOP;
+non terminal AST_OPTASSIGN optionalAssignment;
+non terminal AST_OPTPARAMS_LIST optionalParams;
+non terminal AST_PARAMS_LIST params;
+non terminal AST_OPTEXTENDS optionalExtends;
+non terminal AST_CFIELDLIST cFieldList;
+non terminal AST_SIGNEDINT signedInt;
+non terminal AST_OPTEXPS_LIST optionalExps;
+non terminal AST_EXPLIST expList;
+non terminal AST_OPTEXP optionalExp;
+non terminal AST_STMT_LIST stmtList;
+non terminal AST_DEC_LIST decList;
+
+/***********************/
+/* OPERATOR PRECEDENCE */
+/***********************/
+precedence nonassoc ASSIGN;
+precedence left EQ;
+precedence left LT, GT;
+precedence left PLUS, MINUS;
+precedence left TIMES, DIVIDE;
+precedence nonassoc LBRACK;
+precedence nonassoc LPAREN;
+precedence left DOT;
+
+/************************/
+/* START WITH: Program */
+/************************/
+start with Program;
+
+/********************/
+/* DERIVATION RULES */
+/********************/
+
+Program     ::=     decList:dl                  {: RESULT = new AST_PRGM(dl);  :}
+                    ;
+
+decList     ::=     dec:d decList:dl         {: RESULT = new AST_DEC_LIST(d, dl);  :}
+                    | dec:d                  {: RESULT = new AST_DEC_LIST(d, null);  :}
+                    ;
+
+dec         ::=     varDec:v                {: RESULT = new AST_DEC_VARDEC(v); RESULT.lineNumber = parser.parserLine; :}
+                    | funcDec:f             {: RESULT = new AST_DEC_FUNCDEC(f); RESULT.lineNumber = parser.parserLine; :}
+                    | classDec:c            {: RESULT = new AST_DEC_CLASSDEC(c); RESULT.lineNumber = parser.parserLine; :}
+                    | arrayTypedef:a        {: RESULT = new AST_DEC_ARRAYTYPEDEF(a); RESULT.lineNumber = parser.parserLine; :}
+                    ;
+
+type        ::=    TYPE_INT               {: RESULT = new AST_TYPE_INT(); RESULT.lineNumber = parser.parserLine;    :}
+                   | TYPE_STRING          {: RESULT = new AST_TYPE_STRING(); RESULT.lineNumber = parser.parserLine; :}
+                   | TYPE_VOID            {: RESULT = new AST_TYPE_VOID(); RESULT.lineNumber = parser.parserLine;   :}
+                   | ID:id                {: RESULT = new AST_TYPE_ID(id); RESULT.lineNumber = parser.parserLine;   :}
+                   ;
+
+arrayTypedef   ::=  ARRAY ID:id EQ type:t LBRACK RBRACK SEMICOLON     {: RESULT = new AST_ARRAY_TYPEDEF(id, t); RESULT.lineNumber = parser.parserLine; :}
+                    ;
+
+optionalAssignment ::= /*epsilon*/         {: RESULT = new AST_OPTASSIGN(null); RESULT.lineNumber = parser.parserLine; :}
+                       | ASSIGN exp:e      {: RESULT = new AST_OPTASSIGN(e); RESULT.lineNumber = parser.parserLine;    :}
+                       ;
+
+varDec      ::=    type:t ID:id optionalAssignment:o SEMICOLON   {: RESULT = new AST_VARDEC_SIMPLE(t, id, o); RESULT.lineNumber = parser.parserLine; :}
+                   | type:t ID:id ASSIGN newExp:e SEMICOLON      {: RESULT = new AST_VARDEC_NEW(t, id, e); RESULT.lineNumber = parser.parserLine;    :}
+                   ;
+
+funcDec     ::=    type:t ID:id LPAREN optionalParams:p RPAREN LBRACE  stmtList:sl RBRACE {: RESULT = new AST_FUNCDEC(t, id, p,sl); RESULT.lineNumber = parser.parserLine; :}
+                   ;
+
+optionalParams ::= /*epsilon*/                  {: RESULT = new AST_OPTPARAMS_LIST(null, null, null); RESULT.lineNumber = parser.parserLine; :}
+                   | type:t ID:id params:p      {: RESULT = new AST_OPTPARAMS_LIST(t, id, p); RESULT.lineNumber = parser.parserLine;         :}
+                   ;
+
+params      ::=    /*epsilon*/                      {: RESULT = new AST_PARAMS_LIST(null, null, null); RESULT.lineNumber = parser.parserLine; :}
+                   | COMMA type:t1 ID:id params:p   {: RESULT = new AST_PARAMS_LIST(t1, id, p); RESULT.lineNumber = parser.parserLine; :}
+                   ;
+
+optionalExtends ::=    /*epsilon*/              {: RESULT = new AST_OPTEXTENDS(null); RESULT.lineNumber = parser.parserLine; :}
+                       | EXTENDS ID:id          {: RESULT = new AST_OPTEXTENDS(id); RESULT.lineNumber = parser.parserLine;   :}
+                       ;
+
+classDec    ::=   CLASS ID:id optionalExtends:o LBRACE cFieldList:cl RBRACE   {: RESULT = new AST_CLASSDEC(id, o, cl); RESULT.lineNumber = parser.parserLine; :}
+                  ;
+
+cFieldList  ::=    cField:c cFieldList:cl     {: RESULT = new AST_CFIELDLIST(c, cl); RESULT.lineNumber = parser.parserLine; :}
+                   | cField:c                  {: RESULT = new AST_CFIELDLIST(c, null); RESULT.lineNumber = parser.parserLine; :}
+                   ;
+
+exp         ::=  var:v                                                  {: RESULT = new AST_EXP_VAR(v); RESULT.lineNumber = parser.parserLine; :}
+                | LPAREN exp:e RPAREN                                   {: RESULT = new AST_EXP_PARENS(e); RESULT.lineNumber = parser.parserLine; :}
+                | exp:e1 BINOP:b exp:e2                                 {: RESULT = new AST_EXP_BINOP(e1, e2, b); RESULT.lineNumber = parser.parserLine; :}
+                | ID:id LPAREN optionalExps:oe RPAREN                   {: RESULT = new AST_EXP_FUNC(id, oe); RESULT.lineNumber = parser.parserLine; :}
+                | var:v DOT ID:id LPAREN optionalExps:oe RPAREN         {: RESULT = new AST_EXP_FUNC(v, id, oe); RESULT.lineNumber = parser.parserLine; :}
+                | signedInt:s                                           {: RESULT = new AST_EXP_SIGNEDINT(s); RESULT.lineNumber = parser.parserLine; :}
+                | NIL                                                   {: RESULT = new AST_EXP_NIL(); RESULT.lineNumber = parser.parserLine; :}
+                | STRING:s1                                             {: RESULT = new AST_EXP_STRING(s1); RESULT.lineNumber = parser.parserLine; :}
+                ;
+
+signedInt   ::= INT:i                               {: RESULT = new AST_SIGNEDINT(i, 0); RESULT.lineNumber = parser.parserLine; :}
+                | MINUS INT:i                       {: RESULT = new AST_SIGNEDINT(i, 1); RESULT.lineNumber = parser.parserLine; :}
+                ;
+
+optionalExps ::= /*epsilon*/                    {: RESULT = new AST_OPTEXPS_LIST(null, null); RESULT.lineNumber = parser.parserLine; :}
+                 | exp:e expList:el             {: RESULT = new AST_OPTEXPS_LIST(e, el); RESULT.lineNumber = parser.parserLine; :}
+                 ;
+
+expList      ::= /*epsilon*/                    {: RESULT = new AST_EXPLIST(null, null); RESULT.lineNumber = parser.parserLine; :}
+                 | COMMA exp:e expList:el       {: RESULT = new AST_EXPLIST(e, el); RESULT.lineNumber = parser.parserLine; :}
+                 ;
+
+
+var         ::= ID:id                           {: RESULT = new AST_VAR_SIMPLE(id); RESULT.lineNumber = parser.parserLine; :}
+                | var:v DOT ID:id               {: RESULT = new AST_VAR_FIELD(v, id); RESULT.lineNumber = parser.parserLine; :}
+                | var:v LBRACK exp:e RBRACK     {: RESULT = new AST_VAR_SUBSCRIPT(v, e); RESULT.lineNumber = parser.parserLine; :}
+                ;
+
+stmt        ::= varDec:v                                                         {: RESULT = new AST_STMT_VARDEC(v); RESULT.lineNumber = parser.parserLine; :}
+                | var:v ASSIGN exp:e SEMICOLON                                   {: RESULT = new AST_STMT_ASSIGN(v, e); RESULT.lineNumber = parser.parserLine; :}
+                | var:v ASSIGN newExp:e SEMICOLON                                {: RESULT = new AST_STMT_NEWEXP(v, e); RESULT.lineNumber = parser.parserLine; :}
+                | RETURN optionalExp:o SEMICOLON                                 {: RESULT = new AST_STMT_RETURN(o); RESULT.lineNumber = parser.parserLine; :}
+                | IF LPAREN exp:e RPAREN LBRACE stmtList:sl RBRACE        {: RESULT = new AST_STMT_IF(e, sl); RESULT.lineNumber = parser.parserLine; :}
+                | WHILE LPAREN exp:e RPAREN LBRACE stmtList:sl RBRACE     {: RESULT = new AST_STMT_WHILE(e, sl); RESULT.lineNumber = parser.parserLine; :}
+                | var:v DOT ID:id LPAREN optionalExps:oe RPAREN SEMICOLON   {: RESULT = new AST_STMT_FUNC(v, id, oe); RESULT.lineNumber = parser.parserLine; :}
+                | ID:id LPAREN optionalExps:oe RPAREN SEMICOLON   {: RESULT = new AST_STMT_FUNC( id, oe); RESULT.lineNumber = parser.parserLine; :}
+
+                ;
+
+newExp      ::= NEW type:t                        {: RESULT = new AST_NEWEXP_SIMPLE(t); RESULT.lineNumber = parser.parserLine; :}
+                | NEW type:t LBRACK exp:e RBRACK  {: RESULT = new AST_NEWEXP_ARRAY(t, e); RESULT.lineNumber = parser.parserLine; :}
+                ;
+
+cField      ::= varDec:v        {: RESULT = new AST_CFIELD_VARDEC(v); RESULT.lineNumber = parser.parserLine; :}
+                | funcDec:f     {: RESULT = new AST_CFIELD_FUNCDEC(f); RESULT.lineNumber = parser.parserLine; :}
+                ;
+
+BINOP       ::= PLUS            {: RESULT = new AST_BINOP(0); RESULT.lineNumber = parser.parserLine; :}
+                | MINUS         {: RESULT = new AST_BINOP(1); RESULT.lineNumber = parser.parserLine; :}
+                | TIMES         {: RESULT = new AST_BINOP(2); RESULT.lineNumber = parser.parserLine; :}
+                | DIVIDE        {: RESULT = new AST_BINOP(3); RESULT.lineNumber = parser.parserLine; :}
+                | LT            {: RESULT = new AST_BINOP(4); RESULT.lineNumber = parser.parserLine; :}
+                | GT            {: RESULT = new AST_BINOP(5); RESULT.lineNumber = parser.parserLine; :}
+                | EQ            {: RESULT = new AST_BINOP(6); RESULT.lineNumber = parser.parserLine; :}
+                ;
+
+optionalExp     ::= /*epsilon*/     {: RESULT = new AST_OPTEXP(null); RESULT.lineNumber = parser.parserLine; :}
+                    | exp:e         {: RESULT = new AST_OPTEXP(e); RESULT.lineNumber = parser.parserLine; :}
+                    ;
+
+stmtList	::=		stmt:s	stmtList:l		{: RESULT = new AST_STMT_LIST(s,l); RESULT.lineNumber = parser.parserLine;    :}
+					| stmt:s				{: RESULT = new AST_STMT_LIST(s,null); RESULT.lineNumber = parser.parserLine; :}
+					;
+
