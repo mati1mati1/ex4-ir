@@ -3,6 +3,8 @@ import AST.AST_EXP.AST_EXP;
 import AST.AST_VAR.AST_VAR;
 import AST.SemanticErrorException;
 import TYPES.*;
+import IR.*;
+import TEMP.*;
 public class AST_STMT_ASSIGN extends AST_STMT
 {
 	public AST_VAR var;
@@ -31,5 +33,10 @@ public class AST_STMT_ASSIGN extends AST_STMT
 			throw new SemanticErrorException("" + lineNumber);
 		}
 		return null;
+	}
+	public void IRme() {
+		TEMP varTemp = var.IRme();
+		TEMP expTemp = exp.IRme();
+		IR.getInstance().Add_IRcommand(new IRcommand_Store(varTemp, expTemp));
 	}
 }

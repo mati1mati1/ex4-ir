@@ -31,4 +31,11 @@ public class AST_VAR_SUBSCRIPT extends AST_VAR
 		}
 		return ((TYPE_ARRAY)var_type).type;
 	}
+	public TEMP IRme() {
+		TEMP array = var.IRme();
+		TEMP index = subscript.IRme();
+		TEMP t = TEMP_FACTORY.getInstance().getFreshTEMP();
+		IR.getInstance().Add_IRcommand(new IRcommand_LoadArrayElement(t, array, index));
+		return t;
+	}
 }

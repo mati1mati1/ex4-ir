@@ -6,6 +6,8 @@ import TYPES.*;
 import SYMBOL_TABLE.SYMBOL_TABLE.ScopeType;
 import SYMBOL_TABLE.*;
 import AST.SemanticErrorException;
+import AST.AST_STMT.AST_STMT;
+import IR.*;
 
 public class AST_CLASSDEC extends AST_DEC
 {

@@ -28,4 +28,10 @@ public class AST_VAR_FIELD extends AST_VAR
 		}
 		return ((TYPE_CLASS_VAR_DEC)t).t;
 	}
+	public TEMP IRme() {
+		TEMP obj = var.IRme();
+		TEMP t = TEMP_FACTORY.getInstance().getFreshTEMP();
+		IR.getInstance().Add_IRcommand(new IRcommand_LoadField(t, obj, fieldName));
+		return t;
+	}
 }

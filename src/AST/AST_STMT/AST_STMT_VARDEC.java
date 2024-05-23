@@ -13,4 +13,8 @@ public class AST_STMT_VARDEC extends AST_STMT {
     public TYPE SemantMe() {
         return v.SemantMe();
     }
+    public void IRme() {
+        TEMP t = vardec.IRme();
+        IR.getInstance().Add_IRcommand(new IRcommand_Allocate(t.toString()));
+    }
 }

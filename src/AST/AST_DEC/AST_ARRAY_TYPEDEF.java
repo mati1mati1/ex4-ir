@@ -4,7 +4,8 @@ import SYMBOL_TABLE.SYMBOL_TABLE.ScopeType;
 import SYMBOL_TABLE.*;
 import AST.AST_TYPE.AST_TYPE;
 import TYPES.*;
-
+import AST.AST_STMT.AST_STMT;
+import IR.*;
 public class AST_ARRAY_TYPEDEF extends AST_DEC
 {
     String id;

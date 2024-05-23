@@ -6,6 +6,8 @@ import AST.AST_EXP.AST_EXP_SIGNEDINT;
 import AST.AST_EXP.AST_EXP_STRING;
 import AST.SemanticErrorException;
 import TYPES.*;
+import AST.AST_STMT.AST_STMT;
+import IR.*;
 public class AST_CFIELD_VARDEC extends AST_CFIELD
 {
     public AST_VARDEC v;

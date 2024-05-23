@@ -4,6 +4,8 @@ import AST.AST_TYPE.AST_TYPE;
 import TYPES.*;
 import SYMBOL_TABLE.*;
 import AST.SemanticErrorException;
+import AST.AST_STMT.AST_STMT;
+import IR.*;
 public class AST_VARDEC_NEW extends AST_VARDEC
 {
     public AST_TYPE t;

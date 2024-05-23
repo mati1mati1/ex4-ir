@@ -8,6 +8,10 @@ import AST.AST_TYPE.AST_TYPE_ID;
 import TYPES.*;
 import SYMBOL_TABLE.*;
 import AST.SemanticErrorException;
+import IR.*;
+import TEMP.*;
+import AST.AST_STMT.AST_STMT;
+import IR.*;
 public class AST_VARDEC_SIMPLE extends AST_VARDEC
 {
     public AST_TYPE t;
@@ -74,6 +78,17 @@ public class AST_VARDEC_SIMPLE extends AST_VARDEC
         }
         SYMBOL_TABLE.getInstance().enter(id,type);
         return type;
+    }
+    public TEMP IRme() {
+        TYPE type = SYMBOL_TABLE.getInstance().find(id);
+        TEMP varTemp = TEMP_FACTORY.getInstance().getFreshTEMP();
+        if (o != null) {
+            TEMP expTemp = o.exp.IRme();
+            IR.getInstance().Add_IRcommand(new IRcommand_Store(id, expTemp));
+        } else {
+            IR.getInstance().Add_IRcommand(new IRcommand_Allocate(id));
+        }
+        return varTemp;
     }
 
 

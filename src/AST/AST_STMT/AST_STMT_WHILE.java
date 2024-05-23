@@ -35,4 +35,14 @@ public class AST_STMT_WHILE extends AST_STMT
 		SYMBOL_TABLE.getInstance().endScope();
 		return null;
 	}
+	public void IRme() {
+		String labelStart = IRcommand.getFreshLabel("start_while");
+		String labelEnd = IRcommand.getFreshLabel("end_while");
+		IR.getInstance().Add_IRcommand(new IRcommand_Label(labelStart));
+		TEMP condTemp = cond.IRme();
+		IR.getInstance().Add_IRcommand(new IRcommand_Jump_If_Eq_To_Zero(condTemp, labelEnd));
+		body.IRme();
+		IR.getInstance().Add_IRcommand(new IRcommand_Jump_Label(labelStart));
+		IR.getInstance().Add_IRcommand(new IRcommand_Label(labelEnd));
+	}
 }

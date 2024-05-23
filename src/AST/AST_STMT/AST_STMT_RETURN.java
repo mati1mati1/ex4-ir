@@ -33,4 +33,8 @@ public class AST_STMT_RETURN extends AST_STMT
         }
         return null;
     }
+    public void IRme() {
+        TEMP t = exp.IRme();
+        IR.getInstance().Add_IRcommand(new IRcommand_Return(t));
+    }
 }

@@ -34,4 +34,11 @@ public class AST_STMT_IF extends AST_STMT
 		SYMBOL_TABLE.getInstance().endScope();
 		return null;
 	}
+	public void IRme() {
+		TEMP condTemp = cond.IRme();
+		String labelEnd = IRcommand.getFreshLabel("end_if");
+		IR.getInstance().Add_IRcommand(new IRcommand_Jump_If_Eq_To_Zero(condTemp, labelEnd));
+		body.IRme();
+		IR.getInstance().Add_IRcommand(new IRcommand_Label(labelEnd));
+	}
 }

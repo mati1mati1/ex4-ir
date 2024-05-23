@@ -1,5 +1,7 @@
 package AST.AST_DEC;
 import TYPES.*;
+import AST.AST_STMT.AST_STMT;
+import IR.*;
 public class AST_DEC_CLASSDEC extends AST_DEC {
     public AST_CLASSDEC classDec;
 

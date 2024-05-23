@@ -1,6 +1,8 @@
 package AST.AST_EXP;
 import AST.AST_SIGNEDINT;
 import TYPES.*;
+import AST.AST_STMT.AST_STMT;
+import IR.*;
 public class AST_EXP_SIGNEDINT extends AST_EXP
 {
     public AST_SIGNEDINT s;

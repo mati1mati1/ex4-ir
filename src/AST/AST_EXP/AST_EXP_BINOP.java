@@ -2,6 +2,11 @@ package AST.AST_EXP;
 import AST.AST_BINOP;
 import TYPES.*;
 import AST.SemanticErrorException;
+import IR.*;
+import TEMP.*;
+import AST.AST_STMT.AST_STMT;
+import IR.*;
+
 public class AST_EXP_BINOP extends AST_EXP {
     public AST_BINOP op;
     public AST_EXP left;
@@ -54,7 +59,11 @@ public class AST_EXP_BINOP extends AST_EXP {
                     throw new SemanticErrorException("" + lineNumber);
                 }
         }
-
         return TYPE_INT.getInstance();
+    }
+    public TEMP IRme() {
+        TEMP t1 = left.IRme();
+        TEMP t2 = right.IRme();
+        return op.IRme(t1, t2);
     }
 }

@@ -4,7 +4,10 @@ import AST.AST_VAR.AST_VAR;
 import TYPES.*;
 import SYMBOL_TABLE.*;
 import AST.SemanticErrorException;
-
+import IR.*;
+import TEMP.*;
+import AST.AST_STMT.AST_STMT;
+import IR.*;
 public class AST_EXP_FUNC extends AST_EXP {
     public AST_VAR v;
     String id;
@@ -58,6 +61,17 @@ public class AST_EXP_FUNC extends AST_EXP {
             throw new SemanticErrorException("" + lineNumber);
         }
         return func_type.returnType;
+    }
+    public TEMP IRme() {
+        TEMP_LIST args = oe != null ? oe.IRme() : null;
+        TEMP t = TEMP_FACTORY.getInstance().getFreshTEMP();
+        if (v != null) {
+            TEMP obj = v.IRme();
+            IR.getInstance().Add_IRcommand(new IRcommand_CallMethod(t, obj, id, args));
+        } else {
+            IR.getInstance().Add_IRcommand(new IRcommand_CallFunction(t, id, args));
+        }
+        return t;
     }
 
 }
